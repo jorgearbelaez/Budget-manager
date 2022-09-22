@@ -20,13 +20,28 @@ class Presupuesto {
 
   nuevoGasto(gasto) {
     this.gastos = [...this.gastos, gasto];
-    console.log(this.gastos);
+
+    this.calcularRestante();
+  }
+  calcularRestante() {
+    const totalGastado = this.gastos.reduce(
+      (total, gasto) => total + gasto.cantidad,
+      0
+    );
+    this.restante = this.presupuesto - totalGastado;
+  }
+  eliminarGasto(id) {
+    this.gastos = this.gastos.filter((gasto) => gasto.id !== id);
+    this.calcularRestante();
   }
 }
 class Interfaz {
   insertarPresupuesto(cantidad) {
     const { presupuesto, restante } = cantidad;
     document.querySelector("#total").textContent = presupuesto;
+    document.querySelector("#restante").textContent = restante;
+  }
+  actualizarrestante(restante) {
     document.querySelector("#restante").textContent = restante;
   }
 
@@ -37,7 +52,7 @@ class Interfaz {
 
     //condicional para seleccionar el mensaje
     if (tipo === "error") {
-      mensajeAlerta.classList.add("alert-dander");
+      mensajeAlerta.classList.add("alert-danger");
     } else {
       mensajeAlerta.classList.add("alert-success");
     }
@@ -63,17 +78,20 @@ class Interfaz {
       //creamos la li
       const listaGasto = document.createElement("li");
       listaGasto.className =
-        "list-group-item d-flex justify-conten-between align-items-center";
+        "list-group-item d-flex justify-content-between align-items-center";
       // listaGasto.setAttribute("data-id", id);
       listaGasto.dataset.id = id;
 
       //agregar el html al gasto
-      listaGasto.innerHTML = `${nombre}<span class="badge badge-primary badge-pill"> ${cantidad}</span>`;
+      listaGasto.innerHTML = `${nombre}<span class="badge badge-primary badge-pill"> $ ${cantidad}</span>`;
 
       // agregar boton para borrar el gasto
       const btnBorrar = document.createElement("button");
       btnBorrar.classList.add("btn", "btn-danger", "borrar-gasto");
       btnBorrar.textContent = "borrar";
+      btnBorrar.onclick = () => {
+        eliminarGasto(id);
+      };
       listaGasto.appendChild(btnBorrar);
       gastoListado.appendChild(listaGasto);
     });
@@ -82,6 +100,29 @@ class Interfaz {
   limpiarHTML() {
     while (gastoListado.firstChild) {
       gastoListado.removeChild(gastoListado.firstChild);
+    }
+  }
+  comprobarPresupuesto(objPresupuesto) {
+    const { presupuesto, restante } = objPresupuesto;
+    const restanteDiv = document.querySelector(".restante");
+    // comprobacion del 25%
+    if (presupuesto / 4 > restante) {
+      restanteDiv.classList.remove("alert-success", "alert-warning");
+      restanteDiv.classList.add("alert-danger");
+    } else if (presupuesto / 2 > restante) {
+      restanteDiv.classList.remove("alert-success");
+      restanteDiv.classList.add("alert-warning");
+    } else {
+      restanteDiv.classList.remove("alert-danger", "alert-warning");
+      restanteDiv.classList.add("alert-success");
+    }
+    // me habilita nuevamente el boton despues de eliminar un gasto
+    formulario.querySelector('button[type="submit"]').disabled = false;
+    //si el presupuesto se agota
+    if (restante <= 0) {
+      this.insertarAlerta("El presupuesto se ha agotado", "Error");
+      // deshabilito el boton de submit
+      formulario.querySelector('button[type="submit"]').disabled = true;
     }
   }
 }
@@ -138,9 +179,24 @@ function agregarGasto(e) {
 
   //insertamos el nuevo gasto
   // extraemos los gastos de mi objeto global
-  const { gastos } = presupuesto; // destructuring
+  const { gastos, restante } = presupuesto; // destructuring
   interfaz.insertarGastos(gastos);
+
+  interfaz.actualizarrestante(restante);
+
+  //comprobar presupuesto para asignar clases
+  interfaz.comprobarPresupuesto(presupuesto);
 
   // reinicio el formulario
   formulario.reset();
+}
+function eliminarGasto(id) {
+  //elimina los gastos del objeto
+  presupuesto.eliminarGasto(id);
+
+  // elimina los gastos del htmL
+  const { gastos, restante } = presupuesto;
+  interfaz.insertarGastos(gastos);
+  interfaz.actualizarrestante(restante);
+  interfaz.comprobarPresupuesto(presupuesto);
 }
