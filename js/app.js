@@ -17,6 +17,11 @@ class Presupuesto {
     this.restante = Number(presupuesto);
     this.gastos = [];
   }
+
+  nuevoGasto(gasto) {
+    this.gastos = [...this.gastos, gasto];
+    console.log(this.gastos);
+  }
 }
 class Interfaz {
   insertarPresupuesto(cantidad) {
@@ -45,6 +50,40 @@ class Interfaz {
       mensajeAlerta.remove();
     }, 3000);
   }
+
+  insertarGastos(gastos) {
+    //limpiar html
+
+    this.limpiarHTML();
+
+    // iteramos sobre arreglo de gastos
+    gastos.forEach((gasto) => {
+      const { nombre, cantidad, id } = gasto;
+
+      //creamos la li
+      const listaGasto = document.createElement("li");
+      listaGasto.className =
+        "list-group-item d-flex justify-conten-between align-items-center";
+      // listaGasto.setAttribute("data-id", id);
+      listaGasto.dataset.id = id;
+
+      //agregar el html al gasto
+      listaGasto.innerHTML = `${nombre}<span class="badge badge-primary badge-pill"> ${cantidad}</span>`;
+
+      // agregar boton para borrar el gasto
+      const btnBorrar = document.createElement("button");
+      btnBorrar.classList.add("btn", "btn-danger", "borrar-gasto");
+      btnBorrar.textContent = "borrar";
+      listaGasto.appendChild(btnBorrar);
+      gastoListado.appendChild(listaGasto);
+    });
+  }
+
+  limpiarHTML() {
+    while (gastoListado.firstChild) {
+      gastoListado.removeChild(gastoListado.firstChild);
+    }
+  }
 }
 const interfaz = new Interfaz();
 
@@ -72,7 +111,7 @@ function agregarGasto(e) {
   e.preventDefault();
   // leemos los datos del formulario
   const nombreGasto = document.querySelector("#gasto").value;
-  const cantidadGasto = document.querySelector("#cantidad").value;
+  const cantidadGasto = Number(document.querySelector("#cantidad").value);
 
   // validamos
 
@@ -84,5 +123,24 @@ function agregarGasto(e) {
     return;
   }
 
-  console.log("agregando gasto");
+  // generamos un objeto literal con el gasto
+  const gasto = {
+    nombre: nombreGasto,
+    cantidad: cantidadGasto,
+    id: Date.now(), // identificador
+  };
+
+  // añadimos el gasto
+  presupuesto.nuevoGasto(gasto);
+
+  // insertamos aviso de gasto agregado
+  interfaz.insertarAlerta("Gasto agregado correctamente");
+
+  //insertamos el nuevo gasto
+  // extraemos los gastos de mi objeto global
+  const { gastos } = presupuesto; // destructuring
+  interfaz.insertarGastos(gastos);
+
+  // reinicio el formulario
+  formulario.reset();
 }
