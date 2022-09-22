@@ -6,6 +6,7 @@ const gastoListado = document.querySelector("#gastos");
 eventListeners();
 function eventListeners() {
   document.addEventListener("DOMContentLoaded", preguntarPresupuesto);
+
   formulario.addEventListener("submit", agregarGasto);
 }
 
@@ -189,6 +190,7 @@ function agregarGasto(e) {
 
   // reinicio el formulario
   formulario.reset();
+  sincronizarStorage();
 }
 function eliminarGasto(id) {
   //elimina los gastos del objeto
@@ -199,4 +201,9 @@ function eliminarGasto(id) {
   interfaz.insertarGastos(gastos);
   interfaz.actualizarrestante(restante);
   interfaz.comprobarPresupuesto(presupuesto);
+
+  sincronizarStorage();
+}
+function sincronizarStorage() {
+  localStorage.setItem("budget", JSON.stringify(presupuesto));
 }
